@@ -19,7 +19,7 @@ Set-Location backend
 python -m uvicorn main:app --reload
 ```
 
-The API runs at `http://127.0.0.1:8000`. Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
+The API runs at `http://127.0.0.1:8000`. Interactive API documentation is available at `http://127.0.0.1:8000/docs`. Keep this terminal open while using the frontend; the frontend cannot load questions if the API process has stopped.
 
 The question list endpoint accepts optional pagination parameters: `/questions/?skip=0&limit=50`. `limit` must be between 1 and 500; omitting it keeps the full-list response for existing clients. The search endpoint matches question, answer, and topic text without case sensitivity.
 
@@ -44,11 +44,13 @@ npm run dev
 
 Open the local URL printed by Vite, usually `http://127.0.0.1:5173`.
 
-By default, the frontend connects to `http://127.0.0.1:8000`. To use a different API URL, create `frontend/.env.local` with:
+During development, Vite proxies `/api` requests to `http://127.0.0.1:8000`, avoiding browser cross-origin configuration. To proxy to a backend on another host or port, create `frontend/.env.local` with:
 
 ```dotenv
-VITE_API_URL=http://127.0.0.1:8000
+VITE_API_PROXY_TARGET=http://127.0.0.1:8000
 ```
+
+For a production frontend, set `VITE_API_URL` to the deployed API origin at build time. The backend CORS allowlist must include the deployed frontend origin.
 
 The question library supports text search, topic and mastery filters, and eight-question pages. Use `/` to focus the search field. The add/edit dialog supports Escape to close and keeps keyboard focus inside while open.
 

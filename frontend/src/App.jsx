@@ -6,7 +6,10 @@ import QuestionForm from "./components/QuestionForm.jsx";
 import SearchBar from "./components/SearchBar.jsx";
 import TopicFilter from "./components/TopicFilter.jsx";
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+const API_URL = (
+  import.meta.env.VITE_API_URL
+  || (import.meta.env.DEV ? "/api" : "http://127.0.0.1:8000")
+).replace(/\/$/, "");
 const PAGE_SIZE = 8;
 
 async function request(path, options = {}) {
@@ -19,8 +22,16 @@ async function request(path, options = {}) {
         ...options.headers,
       },
     });
-  } catch {
-    throw new Error(`Could not reach the API at ${API_URL}. Check that your backend is running.`);
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("The API request timed out. Check that the backend is running, then try again.");
+    }
+    const connectionTarget = import.meta.env.DEV && !import.meta.env.VITE_API_URL
+      ? "the backend at http://127.0.0.1:8000"
+      : `the API at ${API_URL}`;
+    throw new Error(
+      `Could not reach ${connectionTarget}. Start it in a second terminal: cd backend; python -m uvicorn main:app --reload`,
+    );
   }
 
   if (!response.ok) {
@@ -38,7 +49,11 @@ async function request(path, options = {}) {
   }
 
   if (response.status === 204) return null;
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    throw new Error("The API returned an unreadable response. Check the backend logs and try again.");
+  }
 }
 
 function EmptyState({ hasFilters, onCreate, onReset }) {
