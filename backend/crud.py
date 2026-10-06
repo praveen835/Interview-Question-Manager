@@ -19,8 +19,13 @@ def create_question(db: Session, question: schemas.QuestionCreate):
 def get_question_by_id(db: Session, question_id: int):
     return db.query(models.Question).filter(models.Question.id == question_id).first()
 
-def get_all_questions(db: Session):
-    return db.query(models.Question).order_by(models.Question.id).all()
+def get_all_questions(db: Session, skip: int = 0, limit: int | None = None):
+    query = db.query(models.Question).order_by(models.Question.id)
+    if skip:
+        query = query.offset(skip)
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
 
 def update_question(db: Session, question_id: int, question: schemas.QuestionUpdate):
     db_question = get_question_by_id(db, question_id)
@@ -69,5 +74,4 @@ def search_questions(db: Session, keyword: str):
 
 def filter_by_topic(db: Session, topic: str):
     return db.query(models.Question).filter(models.Question.topic == topic).all()
-
 

@@ -22,6 +22,27 @@ def test_list_questions(client, question_payload):
     assert [question["id"] for question in response.json()] == [first_id, second_id]
 
 
+def test_list_questions_supports_pagination(client, question_payload):
+    created_ids = [
+        client.post(
+            "/questions/",
+            json={**question_payload, "question": f"Question {number}"},
+        ).json()["id"]
+        for number in range(3)
+    ]
+
+    response = client.get("/questions/", params={"skip": 1, "limit": 1})
+
+    assert response.status_code == 200
+    assert [question["id"] for question in response.json()] == [created_ids[1]]
+
+
+def test_list_questions_rejects_invalid_pagination(client):
+    response = client.get("/questions/", params={"skip": -1})
+
+    assert response.status_code == 422
+
+
 def test_update_question(client, question_payload):
     question_id = client.post("/questions/", json=question_payload).json()["id"]
     updated_payload = {

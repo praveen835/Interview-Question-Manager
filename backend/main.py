@@ -1,6 +1,6 @@
 import os
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -51,8 +51,12 @@ def read_question(question_id: int, db: Session = Depends(get_db)):
     return db_question
 
 @app.get("/questions/", response_model=list[schemas.QuestionResponse])
-def read_all_questions(db: Session = Depends(get_db)):
-    return crud.get_all_questions(db=db)
+def read_all_questions(
+    skip: int = Query(default=0, ge=0),
+    limit: int | None = Query(default=None, ge=1, le=500),
+    db: Session = Depends(get_db),
+):
+    return crud.get_all_questions(db=db, skip=skip, limit=limit)
 
 @app.put("/questions/{question_id}", response_model=schemas.QuestionResponse)
 def update_question(question_id: int, question: schemas.QuestionUpdate, db: Session = Depends
