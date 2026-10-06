@@ -63,6 +63,13 @@ def test_missing_question_returns_404(client):
     assert response.json() == {"detail": "Question not found"}
 
 
+def test_health_check_confirms_database_connection(client):
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "database": "connected"}
+
+
 def test_create_question_trims_text_fields(client, question_payload):
     payload = {key: f"  {value}  " for key, value in question_payload.items()}
 

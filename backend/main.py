@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 import models, schemas, crud
@@ -21,6 +22,11 @@ app.add_middleware(
 @app.get("/")
 def home():
     return {"message": "Welcome to the Interview Question Manager API!"}
+
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    db.execute(text("SELECT 1"))
+    return {"status": "ok", "database": "connected"}
 
 @app.post("/questions/", response_model=schemas.QuestionResponse)
 def create_question(question: schemas.QuestionCreate, db: Session = Depends(get_db)):
@@ -66,4 +72,3 @@ def search_questions(keyword: str, db: Session = Depends(get_db)):
 @app.get("/questions/filter/", response_model=list[schemas.QuestionResponse])
 def filter_questions_by_topic(topic: str, db: Session = Depends(get_db)):
     return crud.filter_by_topic(db, topic=topic)
-
