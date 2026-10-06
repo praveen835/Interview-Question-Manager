@@ -12,12 +12,14 @@ def test_create_and_read_question(client, question_payload):
 
 
 def test_list_questions(client, question_payload):
-    client.post("/questions/", json=question_payload)
+    first_id = client.post("/questions/", json=question_payload).json()["id"]
+    second_payload = {**question_payload, "question": "What is a promise?"}
+    second_id = client.post("/questions/", json=second_payload).json()["id"]
 
     response = client.get("/questions/")
 
     assert response.status_code == 200
-    assert len(response.json()) == 1
+    assert [question["id"] for question in response.json()] == [first_id, second_id]
 
 
 def test_update_question(client, question_payload):
