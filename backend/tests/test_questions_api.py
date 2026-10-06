@@ -59,3 +59,29 @@ def test_missing_question_returns_404(client):
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Question not found"}
+
+
+def test_create_question_trims_text_fields(client, question_payload):
+    payload = {key: f"  {value}  " for key, value in question_payload.items()}
+
+    response = client.post("/questions/", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["question"] == question_payload["question"]
+    assert response.json()["topic"] == question_payload["topic"]
+
+
+def test_create_question_rejects_blank_fields(client, question_payload):
+    question_payload["question"] = "   "
+
+    response = client.post("/questions/", json=question_payload)
+
+    assert response.status_code == 422
+
+
+def test_create_question_rejects_topic_over_limit(client, question_payload):
+    question_payload["topic"] = "t" * 51
+
+    response = client.post("/questions/", json=question_payload)
+
+    assert response.status_code == 422
