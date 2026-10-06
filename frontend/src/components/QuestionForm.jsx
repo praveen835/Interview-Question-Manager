@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const emptyForm = {
   question: "",
@@ -16,6 +16,11 @@ export default function QuestionForm({
   onSubmit,
 }) {
   const [form, setForm] = useState(emptyForm);
+  const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  const isSavingRef = useRef(isSaving);
+  onCloseRef.current = onClose;
+  isSavingRef.current = isSaving;
 
   useEffect(() => {
     setForm(question ? {
@@ -28,12 +33,45 @@ export default function QuestionForm({
 
   useEffect(() => {
     if (!isOpen) return undefined;
+    const previouslyFocused = document.activeElement;
+    const dialog = dialogRef.current;
+    const firstField = dialog?.querySelector("#question");
+    firstField?.focus();
+
     function handleKeyDown(event) {
-      if (event.key === "Escape" && !isSaving) onClose();
+      if (event.key === "Escape" && !isSavingRef.current) {
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialog) return;
+      const focusable = [...dialog.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )];
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isSaving, onClose]);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
+        previouslyFocused.focus();
+      }
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -62,8 +100,10 @@ export default function QuestionForm({
     >
       <section
         aria-labelledby="question-form-title"
+        aria-describedby="question-form-description"
         aria-modal="true"
         className="question-modal"
+        ref={dialogRef}
         role="dialog"
       >
         <div className="modal-heading">
@@ -72,7 +112,7 @@ export default function QuestionForm({
             <h2 id="question-form-title">
               {question ? "Refine your notes." : "Capture a question."}
             </h2>
-            <p>A good answer starts with a question worth keeping.</p>
+            <p id="question-form-description">A good answer starts with a question worth keeping.</p>
           </div>
           <button
             aria-label="Close form"
@@ -88,7 +128,6 @@ export default function QuestionForm({
           <label className="field-label" htmlFor="question">
             Question
             <textarea
-              autoFocus
               id="question"
               maxLength={1000}
               name="question"
