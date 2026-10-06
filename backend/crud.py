@@ -1,3 +1,4 @@
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 import models, schemas
@@ -48,14 +49,26 @@ def mark_question_completed(db: Session, question_id: int):
         db.refresh(db_question)
     return db_question
 
-def search_questions(db: Session,keyword: str):
+def search_questions(db: Session, keyword: str):
+    search_term = keyword.strip().lower()
+    if not search_term:
+        return []
+
     return (
-        db.query(models.Question).filter(models.Question.question.contains(keyword)).all()
+        db.query(models.Question)
+        .filter(
+            or_(
+                func.lower(models.Question.question).contains(search_term, autoescape=True),
+                func.lower(models.Question.answer).contains(search_term, autoescape=True),
+                func.lower(models.Question.topic).contains(search_term, autoescape=True),
+            )
+        )
+        .order_by(models.Question.id)
+        .all()
     )
 
 def filter_by_topic(db: Session, topic: str):
     return db.query(models.Question).filter(models.Question.topic == topic).all()
-
 
 
 

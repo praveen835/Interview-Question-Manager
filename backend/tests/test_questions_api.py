@@ -85,3 +85,24 @@ def test_create_question_rejects_topic_over_limit(client, question_payload):
     response = client.post("/questions/", json=question_payload)
 
     assert response.status_code == 422
+
+
+def test_search_is_case_insensitive_and_includes_answers_and_topics(client, question_payload):
+    client.post("/questions/", json=question_payload)
+
+    answer_match = client.get("/questions/search/", params={"keyword": "RETAINS ACCESS"})
+    topic_match = client.get("/questions/search/", params={"keyword": "javascript"})
+
+    assert answer_match.status_code == 200
+    assert len(answer_match.json()) == 1
+    assert topic_match.status_code == 200
+    assert len(topic_match.json()) == 1
+
+
+def test_search_ignores_whitespace_only_keywords(client, question_payload):
+    client.post("/questions/", json=question_payload)
+
+    response = client.get("/questions/search/", params={"keyword": "   "})
+
+    assert response.status_code == 200
+    assert response.json() == []
