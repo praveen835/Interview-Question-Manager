@@ -7,6 +7,7 @@ import SearchBar from "./components/SearchBar.jsx";
 import TopicFilter from "./components/TopicFilter.jsx";
 
 const API_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+const PAGE_SIZE = 8;
 
 async function request(path, options = {}) {
   let response;
@@ -71,6 +72,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -126,6 +128,17 @@ export default function App() {
       return matchesSearch && matchesTopic && matchesStatus;
     });
   }, [questions, search, selectedTopic, selectedStatus]);
+
+  const pageCount = Math.max(1, Math.ceil(visibleQuestions.length / PAGE_SIZE));
+  const activePage = Math.min(currentPage, pageCount);
+  const pageQuestions = useMemo(() => {
+    const start = (activePage - 1) * PAGE_SIZE;
+    return visibleQuestions.slice(start, start + PAGE_SIZE);
+  }, [activePage, visibleQuestions]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedTopic, selectedStatus]);
 
   function openCreateForm() {
     setEditingQuestion(null);
@@ -204,9 +217,12 @@ export default function App() {
     setSearch("");
     setSelectedTopic("all");
     setSelectedStatus("all");
+    setCurrentPage(1);
   }
 
   const hasFilters = Boolean(search || selectedTopic !== "all" || selectedStatus !== "all");
+  const firstVisibleQuestion = visibleQuestions.length ? (activePage - 1) * PAGE_SIZE + 1 : 0;
+  const lastVisibleQuestion = Math.min(activePage * PAGE_SIZE, visibleQuestions.length);
 
   return (
     <div className="app-shell">
@@ -254,7 +270,9 @@ export default function App() {
                 <h2 id="library-title">Your question library<span>.</span></h2>
               </div>
               <span className="library-count">
-                {visibleQuestions.length} {visibleQuestions.length === 1 ? "question" : "questions"}
+                {visibleQuestions.length
+                  ? `${firstVisibleQuestion}–${lastVisibleQuestion} of ${visibleQuestions.length}`
+                  : "0 questions"}
               </span>
             </div>
 
@@ -284,9 +302,9 @@ export default function App() {
               </div>
             ) : visibleQuestions.length ? (
               <div className="questions-grid">
-                {visibleQuestions.map((question, index) => (
+                {pageQuestions.map((question, index) => (
                   <QuestionCard
-                    index={index}
+                    index={(activePage - 1) * PAGE_SIZE + index}
                     key={question.id}
                     onDelete={deleteQuestion}
                     onEdit={openEditForm}
@@ -297,6 +315,37 @@ export default function App() {
               </div>
             ) : (
               <EmptyState hasFilters={hasFilters} onCreate={openCreateForm} onReset={clearFilters} />
+            )}
+            {!isLoading && !loadError && pageCount > 1 && (
+              <nav aria-label="Question pages" className="pagination">
+                <button
+                  className="page-button page-direction"
+                  disabled={activePage === 1}
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                >
+                  <span aria-hidden="true">←</span> Previous
+                </button>
+                <div className="page-numbers">
+                  {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
+                    <button
+                      aria-current={activePage === page ? "page" : undefined}
+                      aria-label={`Page ${page}`}
+                      className={`page-button page-number ${activePage === page ? "is-current" : ""}`}
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  className="page-button page-direction"
+                  disabled={activePage === pageCount}
+                  onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
+                >
+                  Next <span aria-hidden="true">→</span>
+                </button>
+              </nav>
             )}
           </section>
         </main>

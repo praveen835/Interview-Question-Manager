@@ -240,6 +240,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .load-error .button { margin-left: auto; flex: 0 0 auto; }
 .loading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .skeleton-card { height: 234px; border: 1px solid rgba(49,65,56,.07); border-radius: 6px 21px 6px 21px; background: linear-gradient(110deg, rgba(232,232,222,.42) 8%, rgba(255,255,255,.62) 18%, rgba(232,232,222,.42) 33%); background-size: 200% 100%; animation: shimmer 1600ms var(--curve) infinite; }
+.pagination { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 22px; }
+.page-numbers { display: flex; align-items: center; gap: 5px; }
+.page-button { display: inline-flex; min-width: 35px; height: 35px; align-items: center; justify-content: center; gap: 8px; padding: 0 10px; border: 1px solid transparent; border-radius: 999px; color: #737d72; background: transparent; cursor: pointer; font-size: 10px; transition: color 400ms var(--curve), background-color 400ms var(--curve), border-color 400ms var(--curve), transform 400ms var(--curve); }
+.page-button:hover:not(:disabled) { color: var(--ink); background: rgba(255,255,255,.68); transform: translateY(-1px); }
+.page-button:disabled { opacity: .42; cursor: default; }
+.page-number.is-current { border-color: rgba(49,65,56,.10); color: var(--ink); background: #fbfaf6; box-shadow: inset 0 1px 0 white, 0 3px 9px rgba(32,59,50,.06); }
+.page-direction { font-size: 10px; }
 
 .site-footer { display: flex; min-height: 78px; justify-content: space-between; align-items: center; gap: 20px; border-top: 1px solid rgba(49,65,56,.11); color: #81877c; font-size: 10px; }
 .site-footer > span:first-child { display: inline-flex; align-items: center; gap: 9px; }
@@ -316,6 +323,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .status-tab { flex: 1; padding: 9px 6px; font-size: 9px; }
   .topic-select-wrap { width: 100%; height: 37px; }
   .questions-grid, .loading-grid { grid-template-columns: minmax(0, 1fr); gap: 11px; }
+  .pagination { gap: 5px; }
+  .page-direction { min-width: 35px; padding: 0 8px; font-size: 0; }
+  .page-direction span { font-size: 14px; }
+  .page-numbers { gap: 2px; }
   .question-card-core { min-height: 211px; padding: 16px 16px 12px; }
   .question-title { min-height: 0; margin: 18px 0 12px; font-size: 20px; }
   .site-footer { min-height: 69px; font-size: 9px; }
