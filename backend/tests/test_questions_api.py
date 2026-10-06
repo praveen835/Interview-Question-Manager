@@ -70,6 +70,25 @@ def test_health_check_confirms_database_connection(client):
     assert response.json() == {"status": "ok", "database": "connected"}
 
 
+def test_cors_allows_local_frontend_origin(client):
+    response = client.options(
+        "/questions/",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_cors_does_not_allow_unlisted_origin(client):
+    response = client.get("/questions/", headers={"Origin": "https://example.com"})
+
+    assert "access-control-allow-origin" not in response.headers
+
+
 def test_create_question_trims_text_fields(client, question_payload):
     payload = {key: f"  {value}  " for key, value in question_payload.items()}
 
