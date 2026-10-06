@@ -14,7 +14,7 @@ From the project root, create and activate a virtual environment, then install t
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r backend\requirements.txt
+python -m pip install -r backend\requirements-dev.txt
 Set-Location backend
 python -m uvicorn main:app --reload
 ```
@@ -40,3 +40,12 @@ VITE_API_URL=http://127.0.0.1:8000
 ```
 
 The SQLite database is created locally in the backend working directory and is intentionally excluded from Git.
+
+## Tests
+
+With the virtual environment active, run the backend API tests from the backend directory:
+
+```powershell
+Set-Location backend
+python -m pytest
+```
